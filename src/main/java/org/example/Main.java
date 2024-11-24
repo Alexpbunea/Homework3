@@ -12,7 +12,7 @@ import java.util.List;
 public class Main {
 
     public static void main(String[] args) {
-        String directoryPath = "../jsons";
+        String directoryPath = "../all_tables";
         File folder = new File(directoryPath);
         File[] jsonFiles = folder.listFiles((dir, name) -> name.toLowerCase().endsWith(".json"));
 
@@ -29,7 +29,7 @@ public class Main {
                 Map<String, Map<String, Object>> data = objectMapper.readValue(jsonFile, new TypeReference<>() {});
 
                 for (Map.Entry<String, Map<String, Object>> entry : data.entrySet()) {
-                    String tableId = entry.getKey(); // ejemplo --> "S3.T1", "S5.T2"
+                    String tableId = entry.getKey(); // example --> "S3.T1", "S5.T2"
                     Map<String, Object> tableData = entry.getValue();
 
                     // Procesar caption
