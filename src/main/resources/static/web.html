@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Homework search engine</title>
+<style>
+body {
+	font-family: Arial, sans-serif;
+	background-color: #a8dbcf;
+	color: #333;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	padding: 20px;
+}
+
+h1 {
+	color: #2c3e50;
+	margin-bottom: 20px;
+	text-align: center;
+}
+
+.form-group {
+	width: 100%;
+	max-width: 600px;
+	margin-bottom: 15px;
+}
+
+label {
+	font-weight: bold;
+	margin-top: 10px;
+	display: block;
+}
+
+/* Textarea style to keep the same width but fit all text */
+textarea {
+	width: 100%;
+	max-width: 100%;
+	padding: 10px;
+	margin-top: 5px;
+	border: 2px solid #cdbdbd;
+	border-radius: 5px;
+	font-size: 16px;
+	resize: none;
+	overflow: hidden;
+	box-sizing: border-box;
+}
+
+button {
+	background-color: #3498db;
+	color: #fff;
+	padding: 10px 20px;
+	border: none;
+	border-radius: 5px;
+	font-size: 16px;
+	cursor: pointer;
+	transition: background-color 0.3s ease;
+	margin-top: 10px;
+	margin-right: 5px;
+}
+
+button:hover {
+	background-color: #2980b9;
+}
+
+.button-container {
+	display: flex;
+	gap: 10px;
+}
+</style>
+
+</head>
+<body>
+	<h1>Homework search engine</h1>
+
+	<div class="form-group">
+		<label for="Title">Title:</label>
+		<textarea id="Title" rows="1" oninput="autoResize(this)"
+			placeholder="Enter title here"></textarea>
+	</div>
+	<br>
+	<br>
+
+	<div class="form-group">
+		<label for="Authors">Authors:</label>
+		<textarea id="Authors" rows="1" oninput="autoResize(this)"
+			placeholder="Enter authors here"></textarea>
+	</div>
+	<br>
+	<br>
+
+	<div class="form-group">
+		<label for="Abstract">Abstract:</label>
+		<textarea id="Abstract" rows="1" oninput="autoResize(this)"
+			placeholder="Enter abstract here"></textarea>
+	</div>
+	<br>
+	<br>
+
+	<div class="form-group">
+		<label for="Content">Content:</label>
+		<textarea id="Content" rows="1" oninput="autoResize(this)"
+			placeholder="Enter content here"></textarea>
+	</div>
+	<br>
+	<br>
+
+	<div class="button-container">
+		<button onclick="sendData(event)">Separated</button>
+		<button onclick="sendData(event)">All together</button>
+	</div>
+
+	<div id="responseContainer" style="margin-top: 20px;"></div>
+
+	<script>
+		function autoResize(textarea) {
+        	textarea.style.height = 'auto';
+        	textarea.style.height = `${textarea.scrollHeight}px`;
+    	}
+	
+        function sendData(event) {
+            const Title  = document.getElementById('Title').value;
+            const Authors = document.getElementById('Authors').value;
+            const Abstract = document.getElementById('Abstract').value;
+            const Content = document.getElementById('Content').value;
+            
+            const data = {
+                Title: Title,
+                Authors: Authors,
+                Abstract: Abstract,
+                Content: Content
+            };
+            
+            const buttonText = event.target.textContent;
+            let url;
+            if (buttonText === 'Separated') {
+                url = 'http://localhost:8080/receive';
+            } else if (buttonText === 'All together') {
+                url = 'http://localhost:8080/receiveAll';
+            }
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Response from server (POST): ', data);
+                if (buttonText === "Separated") {
+                    fetchDataSeparated();
+                } else if (buttonText === "All together") {
+                    fetchDataAllTogether();
+                }
+            })
+            .catch(error => {
+                console.error('Error (POST): ', error);
+            });
+        }
+
+        function fetchDataSeparated(){
+            fetch('http://localhost:8080/data')
+            .then(response => response.json())
+            .then(data => {
+                console.log('Response from server (GET): ', data);
+                
+                const responseContainer = document.getElementById('responseContainer');
+                
+                if (data.receivedData) {
+                    responseContainer.innerHTML = `
+                        <p><strong>Results for Title:</strong> ${data.receivedData.Title || ''}</p>
+                        <p><strong>Results for Authors:</strong> ${data.receivedData.Authors || ''}</p>
+                        <p><strong>Results for Abstract:</strong> ${data.receivedData.Abstract || ''}</p>
+                        <p><strong>Results for Content:</strong> ${data.receivedData.Content || ''}</p>
+                    `;
+                } else {
+                    responseContainer.innerHTML = '<p>No data available.</p>';
+                }
+            })
+            .catch(error => {
+                console.error('Error (GET): ', error);
+            });
+        }
+
+        function fetchDataAllTogether(){
+            fetch('http://localhost:8080/dataAll')
+            .then(response => response.json())
+            .then(data => {
+                console.log('Response from server (GET): ', data);
+                
+                const responseContainer = document.getElementById('responseContainer');
+                
+                if (data.receivedData) {
+                    responseContainer.innerHTML = `
+                        <p><strong>Results:</strong> ${data.receivedData.AllTogether || ''}</p>
+                    `;
+                } else {
+                    responseContainer.innerHTML = '<p>No data available.</p>';
+                }
+            })
+            .catch(error => {
+                console.error('Error (GET): ', error);
+            });
+        }
+    </script>
+</body>
+</html>
