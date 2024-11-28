@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Homework Search Engine</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #a8dbcf;
+        color: #333;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 20px;
+    }
+
+    h1 {
+        color: #2c3e50;
+        margin-bottom: 20px;
+        text-align: center;
+    }
+
+    .form-group {
+        width: 100%;
+        max-width: 600px;
+        margin-bottom: 15px;
+    }
+
+    label {
+        font-weight: bold;
+        margin-top: 10px;
+        display: block;
+    }
+
+    textarea {
+        width: 100%;
+        max-width: 100%;
+        padding: 10px;
+        margin-top: 5px;
+        border: 2px solid #cdbdbd;
+        border-radius: 5px;
+        font-size: 16px;
+        resize: none;
+        overflow: hidden;
+        box-sizing: border-box;
+    }
+
+    button {
+        background-color: #3498db;
+        color: #fff;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+        margin-top: 10px;
+    }
+
+    button:hover {
+        background-color: #2980b9;
+    }
+
+    #responseContainer {
+        margin-top: 20px;
+        width: 100%;
+        max-width: 800px;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+    }
+
+    th, td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+    }
+
+    th {
+        background-color: #f4f4f4;
+        font-weight: bold;
+    }
+</style>
+</head>
+<body>
+    <h1>Homework Search Engine</h1>
+    <div class="form-group">
+        <label for="queryInput">Enter your query:</label>
+        <textarea id="queryInput" rows="1" placeholder="Type your query here"></textarea>
+    </div>
+    <button onclick="search()">Search</button>
+    <div id="responseContainer"></div>
+
+    <script>
+        function search() {
+            const query = document.getElementById('queryInput').value;
+            fetch('/search', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(query)
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Response:', data);
+                displayResults(data.results);
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function displayResults(results) {
+            const container = document.getElementById('responseContainer');
+            if (results && results.length > 0) {
+                let table = '<table><tr><th>#</th><th>Result</th></tr>';
+                results.forEach((result, index) => {
+                    table += `<tr><td>${index + 1}</td><td>${result}</td></tr>`;
+                });
+                table += '</table>';
+                container.innerHTML = table;
+            } else {
+                container.innerHTML = '<p>No results found.</p>';
+            }
+        }
+    </script>
+</body>
+</html>
