@@ -47,6 +47,7 @@ public class SearchEngine {
                 return null;
             } else {
                 String escapedQuery = QueryParser.escape(queryString);
+                setAnalyzer();
                 MultiFieldQueryParser queryParser = new MultiFieldQueryParser(fields, this.analyzer);
                 Query query = queryParser.parse(escapedQuery);
                 searchResults = executeQuery(searcher, query);
@@ -56,12 +57,13 @@ public class SearchEngine {
         } catch (ParseException e) {
             System.err.println("Error parsing the query: " + e.getMessage());
         }
+        System.out.println(searchResults);
         return searchResults;
     }
 
 
     private static List<String> executeQuery(IndexSearcher searcher, Query query) throws IOException {
-        TopDocs hits = searcher.search(query, 10);
+        TopDocs hits = searcher.search(query, 2);
         List<String> results = new ArrayList<>();
         if (hits.scoreDocs.length == 0) {
             results.add("<span style='color:red;'><b>No results found for this query :(</b></span>");
@@ -76,16 +78,21 @@ public class SearchEngine {
              * HTML Code is very raw, it needs to be tested to find the best way to show each result
              * Missing fields in HTML String are: Table, TableInfo, Caption, Footnotes and References */
             String HTMLResult = String.format(
-                    "<br><span style='color:green;'><b>Document ID:</b></span> %d, " +
-                            "<span style='color:green;'><b>DocName:</b></span> %s, " +
+                    "<br><span style='color:green;'><b>DocName:</b></span> %s, " +
                             "<span style='color:green;'><b>Table ID:</b></span> %s, " +
-                            "<span style='color:green;'><b>Mark:</b></span> <b>%f</b><br>",
-                    scoreDoc.doc,
+                            "<span style='color:green;'><b>Caption</b></span> %s, " +
+                            "<span style='color:green;'><b>Mark:</b></span> <b>%f</b><br>" +
+                            "%s",
                     doc.get("JsonFileName") != null ? doc.get("JsonFileName") : "N/A",
                     doc.get("ID") != null ? doc.get("ID") : "N/A",
-                    scoreDoc.score
+                    doc.get("Caption") != null ? doc.get("Caption") : "N/A",
+                    scoreDoc.score,
+                    doc.get("Table") != null ? doc.get("Table") : "N/A"
             );
+
             results.add(HTMLResult);
+            //String table = doc.get("Table");
+            //results.add(table);
         }
         return results;
     }

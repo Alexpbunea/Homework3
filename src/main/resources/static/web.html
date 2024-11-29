@@ -1,210 +1,165 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Homework search engine</title>
-<style>
-body {
-	font-family: Arial, sans-serif;
-	background-color: #a8dbcf;
-	color: #333;
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	padding: 20px;
-}
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Homework Search Engine</title>
 
-h1 {
-	color: #2c3e50;
-	margin-bottom: 20px;
-	text-align: center;
-}
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-.form-group {
-	width: 100%;
-	max-width: 600px;
-	margin-bottom: 15px;
-}
+	<style>
+		body {
+            font-family: Arial, sans-serif;
+            background-color: #a8dbcf;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
 
-label {
-	font-weight: bold;
-	margin-top: 10px;
-	display: block;
-}
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            text-align: center;
+        }
 
-/* Textarea style to keep the same width but fit all text */
-textarea {
-	width: 100%;
-	max-width: 100%;
-	padding: 10px;
-	margin-top: 5px;
-	border: 2px solid #cdbdbd;
-	border-radius: 5px;
-	font-size: 16px;
-	resize: none;
-	overflow: hidden;
-	box-sizing: border-box;
-}
+        .form-group {
+            width: 100%;
+            max-width: 600px;
+            margin-bottom: 15px;
+        }
 
-button {
-	background-color: #3498db;
-	color: #fff;
-	padding: 10px 20px;
-	border: none;
-	border-radius: 5px;
-	font-size: 16px;
-	cursor: pointer;
-	transition: background-color 0.3s ease;
-	margin-top: 10px;
-	margin-right: 5px;
-}
+        label {
+            font-weight: bold;
+            margin-top: 10px;
+            display: block;
+        }
 
-button:hover {
-	background-color: #2980b9;
-}
+        textarea {
+            width: 100%;
+            max-width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border: 2px solid #cdbdbd;
+            border-radius: 5px;
+            font-size: 16px;
+            resize: none;
+            overflow: hidden;
+            box-sizing: border-box;
+        }
 
-.button-container {
-	display: flex;
-	gap: 10px;
-}
-</style>
+        button {
+            background-color: #3498db;
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-top: 10px;
+        }
 
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        #responseContainer {
+            margin-top: 20px;
+            width: 100%;
+            max-width: 800px;
+        }
+        
+	</style>
 </head>
 <body>
-	<h1>Homework search engine</h1>
+<h1>Homework Search Engine</h1>
+<div class="form-group">
+	<label for="queryInput">Enter your query:</label>
+	<textarea id="queryInput" rows="1" placeholder="Type your query here"></textarea>
+</div>
+<button onclick="search()">Search</button>
+<div id="responseContainer"></div>
 
-	<div class="form-group">
-		<label for="Title">Title:</label>
-		<textarea id="Title" rows="1" oninput="autoResize(this)"
-			placeholder="Enter title here"></textarea>
-	</div>
-	<br>
-	<br>
+<script>
+	function search() {
+        const query = document.getElementById('queryInput').value;
+        fetch('http://localhost:8080/receive', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(query)
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Response:', data);
+            displayResults(data.results);
+        })
+        .catch(error => console.error('Error:', error));
+    }
 
-	<div class="form-group">
-		<label for="Authors">Authors:</label>
-		<textarea id="Authors" rows="1" oninput="autoResize(this)"
-			placeholder="Enter authors here"></textarea>
-	</div>
-	<br>
-	<br>
-
-	<div class="form-group">
-		<label for="Abstract">Abstract:</label>
-		<textarea id="Abstract" rows="1" oninput="autoResize(this)"
-			placeholder="Enter abstract here"></textarea>
-	</div>
-	<br>
-	<br>
-
-	<div class="form-group">
-		<label for="Content">Content:</label>
-		<textarea id="Content" rows="1" oninput="autoResize(this)"
-			placeholder="Enter content here"></textarea>
-	</div>
-	<br>
-	<br>
-
-	<div class="button-container">
-		<button onclick="sendData(event)">Separated</button>
-		<button onclick="sendData(event)">All together</button>
-	</div>
-
-	<div id="responseContainer" style="margin-top: 20px;"></div>
-
-	<script>
-		function autoResize(textarea) {
-        	textarea.style.height = 'auto';
-        	textarea.style.height = `${textarea.scrollHeight}px`;
-    	}
-	
-        function sendData(event) {
-            const Title  = document.getElementById('Title').value;
-            const Authors = document.getElementById('Authors').value;
-            const Abstract = document.getElementById('Abstract').value;
-            const Content = document.getElementById('Content').value;
-            
-            const data = {
-                Title: Title,
-                Authors: Authors,
-                Abstract: Abstract,
-                Content: Content
-            };
-            
-            const buttonText = event.target.textContent;
-            let url;
-            if (buttonText === 'Separated') {
-                url = 'http://localhost:8080/receive';
-            } else if (buttonText === 'All together') {
-                url = 'http://localhost:8080/receiveAll';
-            }
-
-            fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(data)
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log('Response from server (POST): ', data);
-                if (buttonText === "Separated") {
-                    fetchDataSeparated();
-                } else if (buttonText === "All together") {
-                    fetchDataAllTogether();
-                }
-            })
-            .catch(error => {
-                console.error('Error (POST): ', error);
-            });
-        }
-
-        function fetchDataSeparated(){
-            fetch('http://localhost:8080/data')
+    function displayResults(results) {
+        fetch('http://localhost:8080/data')
             .then(response => response.json())
             .then(data => {
                 console.log('Response from server (GET): ', data);
                 
+                // Mostrar los datos recibidos en el contenedor
                 const responseContainer = document.getElementById('responseContainer');
-                
-                if (data.receivedData) {
-                    responseContainer.innerHTML = `
-                        <p><strong>Results for Title:</strong> ${data.receivedData.Title || ''}</p>
-                        <p><strong>Results for Authors:</strong> ${data.receivedData.Authors || ''}</p>
-                        <p><strong>Results for Abstract:</strong> ${data.receivedData.Abstract || ''}</p>
-                        <p><strong>Results for Content:</strong> ${data.receivedData.Content || ''}</p>
+                if (data.receivedData && data.receivedData.length > 0) {
+                    let accordionHTML = `
+                        <div class="accordion" id="resultsAccordion">
                     `;
-                } else {
-                    responseContainer.innerHTML = '<p>No data available.</p>';
-                }
-            })
-            .catch(error => {
-                console.error('Error (GET): ', error);
-            });
-        }
+                    data.receivedData.forEach((result, index) => {
+                        const docNameMatch = result.match(/<span style='color:green;'><b>DocName:<\/b><\/span>\s*([^,]+),/);
+                        const tableIDMatch = result.match(/<span style='color:green;'><b>Table ID:<\/b><\/span>\s*([^,]+),/);
+                        const captionMatch = result.match(/<span style='color:green;'><b>Caption<\/b><\/span>\s*([^,]+),/);
+                        const markMatch = result.match(/<span style='color:green;'><b>Mark:<\/b><\/span>\s*<b>([^<]+)<\/b><\/span>/);
+                        
+                        const tableMatch = result.match(/<table[^>]*>([\s\S]*?)<\/table>/);
+                        const tableHTML = tableMatch ? tableMatch[0] : "<p>No table found</p>";
+                        
+                        // Asignar valores extraídos
+                        const docName = docNameMatch ? docNameMatch[1] : "N/A";
+                        const tableID = tableIDMatch ? tableIDMatch[1] : "N/A";
+                        const caption = captionMatch ? captionMatch[1] : "N/A";
+                        const mark = markMatch ? markMatch[1] : "0.00";
 
-        function fetchDataAllTogether(){
-            fetch('http://localhost:8080/dataAll')
-            .then(response => response.json())
-            .then(data => {
-                console.log('Response from server (GET): ', data);
-                
-                const responseContainer = document.getElementById('responseContainer');
-                
-                if (data.receivedData) {
-                    responseContainer.innerHTML = `
-                        <p><strong>Results:</strong> ${data.receivedData.AllTogether || ''}</p>
+                        // Crear el HTML del acordeón
+                        accordionHTML += `
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="heading${index}">
+                                    <button class="accordion-button ${index === 0 ? '' : 'collapsed'}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse${index}" aria-expanded="${index === 0}" aria-controls="collapse${index}">
+                                        ${caption}
+                                    </button>
+                                </h2>
+                                <div id="collapse${index}" class="accordion-collapse collapse ${index === 0 ? 'show' : ''}" aria-labelledby="heading${index}" data-bs-parent="#resultsAccordion">
+                                    <div class="accordion-body">
+                                        <span style='color:green;'><b>DocName:</b></span> ${docName},
+                                        <span style='color:green;'><b>Table ID:</b></span> ${tableID},
+                                        <span style='color:green;'><b>Mark:</b></span> <b>${mark}</b><br>
+                                        ${tableHTML}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+
+                    accordionHTML += `
+                        </div>
                     `;
+                    responseContainer.innerHTML = accordionHTML;
+            
                 } else {
-                    responseContainer.innerHTML = '<p>No data available.</p>';
+                    responseContainer.innerHTML = '<p>No results found.</p>';
                 }
+ 
             })
             .catch(error => {
                 console.error('Error (GET): ', error);
             });
-        }
-    </script>
+    }
+</script>
 </body>
 </html>
