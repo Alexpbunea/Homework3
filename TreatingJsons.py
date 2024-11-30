@@ -41,6 +41,7 @@ def process_json_file(file_path):
 
     fields_to_remove = ["INFO", "PAPER'S NUMBER OF TABLES", "global_footnotes"]
 
+
     for field in fields_to_remove:
         result = remove_field(data, field, file_path)
         if result[1] == 0:  # Archivo eliminado
@@ -66,7 +67,12 @@ def process_json_file(file_path):
 
 def remove_page_number_from_json(json_dir):
     for filename in os.listdir(json_dir):
-        if filename.endswith(".json"):
+        if filename.startswith("._"):
+            file_path = os.path.join(json_dir, filename)
+            print(f"Removing the binary file --> {filename}")
+            os.remove(file_path)
+            continue
+        elif filename.endswith(".json"):
             file_path = os.path.join(json_dir, filename)
             try:
                 process_json_file(file_path)
@@ -77,7 +83,7 @@ def remove_page_number_from_json(json_dir):
 
 
 
-directorio_json = r"C:\Users\Dell XPS 9510\Desktop\java\t2\jsons"
+directorio_json = r"C:\Users\Dell XPS 9510\Desktop\java\t2\all_tables"
 
 print()
 print()

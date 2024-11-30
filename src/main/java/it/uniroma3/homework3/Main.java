@@ -38,6 +38,7 @@ public class Main {
         int countFiles = 0;
         for (File jsonFile : jsonFiles) {
             System.out.println("Processing the file: " + jsonFile.getName());
+            System.out.println("HOLLAAAAAAAAAAAAAAAAAAAAAAA");
 
             try {
                 Map<String, Map<String, Object>> data = objectMapper.readValue(jsonFile, new TypeReference<>() {});
@@ -47,7 +48,7 @@ public class Main {
                 for (Map.Entry<String, Map<String, Object>> entry : data.entrySet()) {
                     String tableId = entry.getKey();
                     Map<String, Object> tableData = entry.getValue();
-
+                    System.out.println("22222222222222222");
                     // List of tables for the current file
                     List<Table> list = new ArrayList<>();
 

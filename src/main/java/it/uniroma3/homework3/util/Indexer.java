@@ -36,6 +36,8 @@ public class Indexer {
                 List<List<Table>> tableLists = mapTables.get(JsonFileName);
                 for (List<Table> tableList : tableLists) {
                     for (Table table : tableList) {
+                        System.out.println("9999999999999999999999999");
+                        System.out.println(JsonFileName + " " + table.getId());
                         Document doc = new Document();
                         doc.add(new StringField("JsonFileName", JsonFileName, Field.Store.YES));
                         doc.add(new StringField("ID", table.getId(), Field.Store.YES));
