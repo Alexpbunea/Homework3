@@ -12,11 +12,13 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import java.util.List;
 import java.util.Map;
 
+// TODO
 @Controller
 public class DataController {
 
     private final SearchEngine searchEngine;
     private Map<String , List<StructureResults>> receivedData;
+
 
     @Autowired
     public DataController(SearchEngine searchEngine) {
