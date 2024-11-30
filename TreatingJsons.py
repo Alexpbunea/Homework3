@@ -77,7 +77,7 @@ def remove_page_number_from_json(json_dir):
 
 
 
-directorio_json = r"../all_tables"
+directorio_json = r"C:\Users\Dell XPS 9510\Desktop\java\t2\jsons"
 
 print()
 print()

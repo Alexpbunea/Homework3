@@ -69,8 +69,41 @@
         #responseContainer {
             margin-top: 20px;
             width: 100%;
-            max-width: 800px;
+            max-width: 90%
         }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 18px;
+            text-align: left;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            overflow: hidden; 
+            }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            }
+
+        th {
+            background-color: #f4f4f4;
+            font-weight: bold;
+            }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+            }
+
+        tr:hover {
+            background-color: #f1f1f1;
+            }
+
+        th {
+            border-bottom: 2px solid #00b597;
+            }
         
 	</style>
 </head>
@@ -99,67 +132,84 @@
         .catch(error => console.error('Error:', error));
     }
 
-    function displayResults(results) {
-        fetch('http://localhost:8080/data')
-            .then(response => response.json())
-            .then(data => {
-                console.log('Response from server (GET): ', data);
-                
-                // Mostrar los datos recibidos en el contenedor
-                const responseContainer = document.getElementById('responseContainer');
-                if (data.receivedData && data.receivedData.length > 0) {
-                    let accordionHTML = `
-                        <div class="accordion" id="resultsAccordion">
-                    `;
-                    data.receivedData.forEach((result, index) => {
-                        const docNameMatch = result.match(/<span style='color:green;'><b>DocName:<\/b><\/span>\s*([^,]+),/);
-                        const tableIDMatch = result.match(/<span style='color:green;'><b>Table ID:<\/b><\/span>\s*([^,]+),/);
-                        const captionMatch = result.match(/<span style='color:green;'><b>Caption<\/b><\/span>\s*([^,]+),/);
-                        const markMatch = result.match(/<span style='color:green;'><b>Mark:<\/b><\/span>\s*<b>([^<]+)<\/b><\/span>/);
-                        
-                        const tableMatch = result.match(/<table[^>]*>([\s\S]*?)<\/table>/);
-                        const tableHTML = tableMatch ? tableMatch[0] : "<p>No table found</p>";
-                        
-                        // Asignar valores extraídos
-                        const docName = docNameMatch ? docNameMatch[1] : "N/A";
-                        const tableID = tableIDMatch ? tableIDMatch[1] : "N/A";
-                        const caption = captionMatch ? captionMatch[1] : "N/A";
-                        const mark = markMatch ? markMatch[1] : "0.00";
+    function displayResults() {
+    fetch('http://localhost:8080/data')
+        .then(response => response.json())
+        .then(data => {
+            console.log('Response from server (GET): ', data);
+            
+            // Mostrar los datos recibidos en el contenedor
+            const responseContainer = document.getElementById('responseContainer');
+            const resultsMap = data.receivedData;
+            
 
-                        // Crear el HTML del acordeón
-                        accordionHTML += `
-                            <div class="accordion-item">
-                                <h2 class="accordion-header" id="heading${index}">
-                                    <button class="accordion-button ${index === 0 ? '' : 'collapsed'}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse${index}" aria-expanded="${index === 0}" aria-controls="collapse${index}">
-                                        ${caption}
-                                    </button>
-                                </h2>
-                                <div id="collapse${index}" class="accordion-collapse collapse ${index === 0 ? 'show' : ''}" aria-labelledby="heading${index}" data-bs-parent="#resultsAccordion">
-                                    <div class="accordion-body">
-                                        <span style='color:green;'><b>DocName:</b></span> ${docName},
-                                        <span style='color:green;'><b>Table ID:</b></span> ${tableID},
-                                        <span style='color:green;'><b>Mark:</b></span> <b>${mark}</b><br>
-                                        ${tableHTML}
-                                    </div>
-                                </div>
+            if (resultsMap && Object.keys(resultsMap).length > 0) {
+                let accordionHTML = `
+                    <div class="accordion" id="resultsAccordion">
+                `;
+
+                // Recorrer las claves del mapa
+                Object.entries(resultsMap).forEach(([key, resultsList], index) => {
+                    // `key` es "Result1", "Result2", etc.
+                    // `resultsList` es un arreglo de StructureResults
+                    let listContent = '';
+                    let caption1 = ''
+
+                    resultsList.forEach(result => {
+                        const docName = result.docName || "N/A";
+                        const tableID = result.id || "N/A";
+                        const caption = result.caption || "N/A";
+                        const mark = result.mark || "0.00";
+                        const tableHTML = result.table || "<p>No table found</p>";
+                        
+                        
+                        caption1 += `
+                            <b>${caption}</b>
+                        `;
+                        
+                        listContent += `
+                            <div>
+                                <span style='color:green;'><b>DocName:</b></span> ${docName},
+                                <span style='color:green;'><b>Table ID:</b></span> ${tableID},
+                                <span style='color:green;'><b>Mark:</b></span> <b>${mark}</b><br><br>
+                                ${tableHTML}
                             </div>
+                            <hr>
                         `;
                     });
 
+
+                    // Crear la sección del acordeón para este `key`
                     accordionHTML += `
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="heading${index}">
+                                <button class="accordion-button ${index === 0 ? '' : 'collapsed'}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse${index}" aria-expanded="${index === 0}" aria-controls="collapse${index}">
+                                    ${caption1}
+                                </button>
+                            </h2>
+                            <div id="collapse${index}" class="accordion-collapse collapse ${index === 0 ? 'show' : ''}" aria-labelledby="heading${index}" data-bs-parent="#resultsAccordion">
+                                <div class="accordion-body">
+                                    ${listContent}
+                                </div>
+                            </div>
                         </div>
                     `;
-                    responseContainer.innerHTML = accordionHTML;
-            
-                } else {
-                    responseContainer.innerHTML = '<p>No results found.</p>';
-                }
- 
-            })
-            .catch(error => {
-                console.error('Error (GET): ', error);
-            });
-    }
+                });
+
+                accordionHTML += `
+                    </div>
+                `;
+                responseContainer.innerHTML = accordionHTML;
+
+            } else {
+                responseContainer.innerHTML = '<p>No results found.</p>';
+            }
+        })
+        .catch(error => {
+            console.error('Error (GET): ', error);
+        });
+}
+
 </script>
 </body>
 </html>

@@ -1,6 +1,7 @@
 package it.uniroma3.homework3.controller;
 
 import it.uniroma3.homework3.service.SearchEngine;
+import it.uniroma3.homework3.util.StructureResults;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,8 +17,8 @@ import java.util.Map;
 public class DataController {
 
     private final SearchEngine searchEngine;
-    private List<String> receivedData;
-    private List<String> receivedDataAll;
+    private Map<String , List<StructureResults>> receivedData;
+
 
     @Autowired
     public DataController(SearchEngine searchEngine) {

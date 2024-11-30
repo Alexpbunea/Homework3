@@ -1,6 +1,7 @@
 package it.uniroma3.homework3.service;
 
 import it.uniroma3.homework3.util.AnalyzerFactory;
+import it.uniroma3.homework3.util.StructureResults;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.DirectoryReader;
@@ -20,8 +21,7 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 @Service
 public class SearchEngine {
@@ -32,9 +32,9 @@ public class SearchEngine {
         this.analyzer = AnalyzerFactory.getAnalyzer();
     }
 
-    public List<String> search(String queryString) {
+    public Map<String, List<StructureResults>> search(String queryString) {
+        Map<String , List<StructureResults>> mapResults = new LinkedHashMap<>();
         String[] fields = {"Caption", "TableInfo", "Footnotes", "References"};
-        List<String> searchResults = new ArrayList<>();
         Path indexPath = Paths.get("../lucene-index");
 
         try (Directory directory = FSDirectory.open(indexPath);
@@ -50,50 +50,67 @@ public class SearchEngine {
                 setAnalyzer();
                 MultiFieldQueryParser queryParser = new MultiFieldQueryParser(fields, this.analyzer);
                 Query query = queryParser.parse(escapedQuery);
-                searchResults = executeQuery(searcher, query);
+                mapResults = executeQuery(searcher, query);
             }
         } catch (IOException e) {
             System.err.println("Error accessing the index: " + e.getMessage());
         } catch (ParseException e) {
             System.err.println("Error parsing the query: " + e.getMessage());
         }
-        System.out.println(searchResults);
-        return searchResults;
+        System.out.println(mapResults);
+        return mapResults;
     }
 
 
-    private static List<String> executeQuery(IndexSearcher searcher, Query query) throws IOException {
-        TopDocs hits = searcher.search(query, 2);
-        List<String> results = new ArrayList<>();
-        if (hits.scoreDocs.length == 0) {
-            results.add("<span style='color:red;'><b>No results found for this query :(</b></span>");
-            return results;
-        }
+    private static Map<String , List<StructureResults>> executeQuery(IndexSearcher searcher, Query query) throws IOException {
+        TopDocs hits = searcher.search(query, 5);
+        Map<String , List<StructureResults>> mapResults = new LinkedHashMap<>();
+
+//        if (hits.scoreDocs.length == 0) {
+//            results.add("<span style='color:red;'><b>No results found for this query :(</b></span>");
+//            return results;
+//        }
 
         StoredFields storedFields = searcher.storedFields();
+        int indexResult = 1;
+        List<StructureResults> results = new ArrayList<>();
+
         for (ScoreDoc scoreDoc : hits.scoreDocs) {
             Document doc = storedFields.document(scoreDoc.doc);
 
-            /* Needs to be edited to show the table and other necessary content
-             * HTML Code is very raw, it needs to be tested to find the best way to show each result
-             * Missing fields in HTML String are: Table, TableInfo, Caption, Footnotes and References */
-            String HTMLResult = String.format(
-                    "<br><span style='color:green;'><b>DocName:</b></span> %s, " +
-                            "<span style='color:green;'><b>Table ID:</b></span> %s, " +
-                            "<span style='color:green;'><b>Caption</b></span> %s, " +
-                            "<span style='color:green;'><b>Mark:</b></span> <b>%f</b><br>" +
-                            "%s",
-                    doc.get("JsonFileName") != null ? doc.get("JsonFileName") : "N/A",
-                    doc.get("ID") != null ? doc.get("ID") : "N/A",
-                    doc.get("Caption") != null ? doc.get("Caption") : "N/A",
-                    scoreDoc.score,
-                    doc.get("Table") != null ? doc.get("Table") : "N/A"
-            );
 
+            String jsonFileName = doc.get("JsonFileName") != null ? doc.get("JsonFileName") : "Unknown";
+            String id = doc.get("ID") != null ? doc.get("ID") : "Unknown";
+            String caption = doc.get("Caption") != null ? doc.get("Caption") : "No Caption";
+            String tableContent = doc.get("Table") != null ? doc.get("Table") : "No Table Data";
+
+            StructureResults HTMLResult = new StructureResults(
+                    jsonFileName ,
+                    id,
+                    caption,
+                    String.valueOf(scoreDoc.score),
+                    tableContent
+            );
             results.add(HTMLResult);
-            //String table = doc.get("Table");
-            //results.add(table);
+
+
         }
-        return results;
+        //Sorts automatically the results
+        results.sort((r1, r2) -> {
+            float score1 = Float.parseFloat(r1.getMark());
+            float score2 = Float.parseFloat(r2.getMark());
+            return Float.compare(score2, score1);
+        });
+
+
+        for (StructureResults r : results){
+            List<StructureResults> list = new ArrayList<>();
+            list.add(r);
+            String key = "Result " + indexResult;
+            mapResults.put(key, list);
+            indexResult++;
+        }
+
+        return mapResults;
     }
 }
