@@ -48,7 +48,9 @@ public class SearchEngine {
             } else {
                 String escapedQuery = QueryParser.escape(queryString);
                 setAnalyzer();
-                MultiFieldQueryParser queryParser = new MultiFieldQueryParser(fields, this.analyzer);
+                Map<String, Float> boosts = new HashMap<>();
+                boosts.put("TableInfo", 5.0f);
+                MultiFieldQueryParser queryParser = new MultiFieldQueryParser(fields, this.analyzer/*, boosts*/);
                 Query query = queryParser.parse(escapedQuery);
                 mapResults = executeQuery(searcher, query);
             }
@@ -63,7 +65,7 @@ public class SearchEngine {
 
 
     private static Map<String , List<StructureResults>> executeQuery(IndexSearcher searcher, Query query) throws IOException {
-        TopDocs hits = searcher.search(query, 5);
+        TopDocs hits = searcher.search(query, 10);
         Map<String , List<StructureResults>> mapResults = new LinkedHashMap<>();
 
 //        if (hits.scoreDocs.length == 0) {

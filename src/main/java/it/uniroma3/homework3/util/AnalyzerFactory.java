@@ -1,7 +1,6 @@
 package it.uniroma3.homework3.util;
 
 import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.core.WhitespaceAnalyzer;
 import org.apache.lucene.analysis.en.EnglishAnalyzer;
 import org.apache.lucene.analysis.miscellaneous.PerFieldAnalyzerWrapper;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
@@ -21,7 +20,7 @@ public class AnalyzerFactory {
         if (analyzer == null) {
             Analyzer defaultAnalyzer = new StandardAnalyzer();
             Map<String, Analyzer> perFieldAnalyzers = new HashMap<>();
-            perFieldAnalyzers.put("Caption", new WhitespaceAnalyzer());
+            perFieldAnalyzers.put("Caption", new StandardAnalyzer());
             perFieldAnalyzers.put("TableInfo", new CommaSeparatedAnalyzer());
             perFieldAnalyzers.put("Footnotes", new EnglishAnalyzer());
             perFieldAnalyzers.put("References", new EnglishAnalyzer());

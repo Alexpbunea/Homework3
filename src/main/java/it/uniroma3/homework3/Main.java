@@ -15,6 +15,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 public class Main {
@@ -97,7 +99,8 @@ public class Main {
     }
 
     private static String processTables(Object table) {
-        String columnsAndRows = "Null,";
+        List<String> columnsAndRows = new ArrayList<>();
+        //String columnsAndRows = "Null,";
 
         if (table != null) {
             if (table instanceof String) {
@@ -106,19 +109,18 @@ public class Main {
                     // Process table only if it has content
                     Document doc = Jsoup.parse(tableString);
                     Elements rows = doc.select("tr");
-                    StringBuilder resultBuilder = new StringBuilder();
+                    //StringBuilder resultBuilder = new StringBuilder();
 
                     for (Element row : rows) {
-                        Elements cells = row.select("th");
+                        Elements cells = row.select("th, td");
                         for (Element cell : cells) {
                             String text = cell.text().trim();
-                            resultBuilder.append(text).append(", ");
+                            columnsAndRows.add(text);
+                            //resultBuilder.append(text).append(", ");
                         }
                     }
-                    if (resultBuilder.length() > 0) {
-                        columnsAndRows = resultBuilder.toString().trim();
-                    } else {
-                        System.out.println("- No header cells (`th`) found in the table.");
+                    if (columnsAndRows.isEmpty()) {
+                        System.out.println("- No header cells (th) found in the table.");
                     }
                 } else {
                     System.out.println("- Table content is empty or only whitespace.");
@@ -129,7 +131,25 @@ public class Main {
         } else {
             System.out.println("- Table is null.");
         }
+        List<String> noNumbers = extractNonNumbers(columnsAndRows);
+        return String.join(", ", noNumbers);
+    }
 
-        return columnsAndRows;
+    public static List<String> extractNonNumbers(List<String> inputStrings) {
+        // Regex to match standalone numbers (negative, decimal, or percentage)
+        String regex = "\\b-?\\d+(?:[.,]\\d+)?%?\\b";
+        Pattern pattern = Pattern.compile(regex);
+
+        List<String> nonNumbers = new ArrayList<>();
+
+        for (String str : inputStrings) {
+            Matcher matcher = pattern.matcher(str);
+            // Add the string to the result if it doesn't match the numeric pattern
+            if (!matcher.find()) {
+                nonNumbers.add(str);
+            }
+        }
+
+        return nonNumbers;
     }
 }
