@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Homework Search Engine</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <link href="css_files/ar5iv-fonts.0.8.0.min.css" media="all" rel="stylesheet">
+    <link href="css_files/ar5iv.0.8.0.min.css" media="all" rel="stylesheet">
+    <link href="css_files/ar5iv-site.0.2.2.css" media="all" rel="stylesheet">
+
+	<style>
+		body {
+            font-family: Arial, sans-serif;
+            background-color: #a8dbcf;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .form-group {
+            width: 100%;
+            max-width: 600px;
+            margin-bottom: 15px;
+        }
+
+        label {
+            font-weight: bold;
+            margin-top: 10px;
+            display: block;
+        }
+
+        textarea {
+            width: 100%;
+            max-width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border: 2px solid #cdbdbd;
+            border-radius: 5px;
+            font-size: 16px;
+            resize: none;
+            overflow: hidden;
+            box-sizing: border-box;
+        }
+
+        button {
+            background-color: #3498db;
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        #responseContainer {
+            margin-top: 20px;
+            width: 100%;
+            max-width: 90%
+        }
+
+    </style>
+</head>
+<body>
+<h1>Homework Search Engine</h1>
+<div class="form-group">
+	<label for="queryInput">Enter your query:</label>
+	<textarea id="queryInput" rows="1" placeholder="Type your query here"></textarea>
+</div>
+<button onclick="search()">Search</button>
+<div id="responseContainer"></div>
+
+<script>
+	function search() {
+        const query = document.getElementById('queryInput').value;
+        fetch('http://localhost:8080/receive', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(query)
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Response:', data);
+            displayResults(data.results);
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+    function displayResults() {
+    fetch('http://localhost:8080/data')
+        .then(response => response.json())
+        .then(data => {
+            console.log('Response from server (GET): ', data);
+            
+            // Mostrar los datos recibidos en el contenedor
+            const responseContainer = document.getElementById('responseContainer');
+            const resultsMap = data.receivedData;
+            
+
+            if (resultsMap && Object.keys(resultsMap).length > 0) {
+                let accordionHTML = `
+                    <div class="accordion" id="resultsAccordion">
+                `;
+
+                // Recorrer las claves del mapa
+                Object.entries(resultsMap).forEach(([key, resultsList], index) => {
+                    // `key` es "Result1", "Result2", etc.
+                    // `resultsList` es un arreglo de StructureResults
+                    let listContent = '';
+                    let caption1 = ''
+
+                    resultsList.forEach(result => {
+                        const docName = result.docName || "N/A";
+                        const tableID = result.id || "N/A";
+                        const caption = result.caption || "N/A";
+                        const mark = result.mark || "0.00";
+                        const tableHTML = result.table || "<p>No table found</p>";
+                        
+                        
+                        caption1 += `
+                            <b>${caption}</b>
+                        `;
+                        
+                        listContent += `
+                            <div>
+                                <span style='color:green;'><b>DocName:</b></span> ${docName},
+                                <span style='color:green;'><b>Table ID:</b></span> ${tableID},
+                                <span style='color:green;'><b>Mark:</b></span> <b>${mark}</b><br><br>
+                                ${tableHTML}
+                            </div>
+                            <hr>
+                        `;
+                    });
+
+
+                    // Crear la sección del acordeón para este `key`
+                    accordionHTML += `
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="heading${index}">
+                                <button class="accordion-button ${index === 0 ? '' : 'collapsed'}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse${index}" aria-expanded="${index === 0}" aria-controls="collapse${index}">
+                                    ${caption1}
+                                </button>
+                            </h2>
+                            <div id="collapse${index}" class="accordion-collapse collapse ${index === 0 ? 'show' : ''}" aria-labelledby="heading${index}" data-bs-parent="#resultsAccordion">
+                                <div class="accordion-body">
+                                    ${listContent}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                accordionHTML += `
+                    </div>
+                `;
+                responseContainer.innerHTML = accordionHTML;
+
+            } else {
+                responseContainer.innerHTML = '<p>No results found.</p>';
+            }
+        })
+        .catch(error => {
+            console.error('Error (GET): ', error);
+        });
+}
+
+</script>
+</body>
+</html>

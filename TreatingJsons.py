@@ -28,12 +28,9 @@ def remove_brackets(data, field):
                     data[field] = stringWithAllCells
                 else:
                     data[field] = " ".join(data[field])
-                    
-                
-        
+
         except Exception as e:
             print(f"Error processing brackets in field '{field}': {e}") #only a print because [] is not compulsary
-        
 
 def process_json_file(file_path):
     with open(file_path, "r", encoding="utf-8") as file:
@@ -51,7 +48,6 @@ def process_json_file(file_path):
         elif result[1] == -1:
             print(f"Field '{field}' not found in file {file_path}.")
 
-    
     
     fields_to_clean = ["caption", "table", "footnotes", "references"]
     for table_id, table_data in data.items():

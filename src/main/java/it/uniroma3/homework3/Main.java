@@ -1,33 +1,34 @@
-package org.example;
+package it.uniroma3.homework3;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
-
-//This is only for the table processing, because it is written in html
+import com.fasterxml.jackson.databind.ObjectMapper;
+import it.uniroma3.homework3.util.AnalyzerFactory;
+import it.uniroma3.homework3.util.Table;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import javax.swing.plaf.synth.SynthTextAreaUI;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 public class Main {
 
-    public static void main(String[] args) throws IOException {
-        String directoryPath = "../jsons";
+    public static void main(String[] args) {
+        String directoryPath = "../all_tables";
         String pathIndex = "../lucene-index";
 
         File folder = new File(directoryPath);
         File[] jsonFiles = folder.listFiles((dir, name) -> name.toLowerCase().endsWith(".json"));
 
-        Map<String, List<List<Tabla>>> mapTables = new HashMap<>();
+        Map<String, List<List<Table>>> mapTables = new HashMap<>();
 
         if (jsonFiles == null || jsonFiles.length == 0) {
             System.out.println("No files found in the specified directory.");
@@ -35,7 +36,7 @@ public class Main {
         }
 
         ObjectMapper objectMapper = new ObjectMapper();
-        int count = 0;
+
         int countFiles = 0;
         for (File jsonFile : jsonFiles) {
             System.out.println("Processing the file: " + jsonFile.getName());
@@ -43,17 +44,16 @@ public class Main {
             try {
                 Map<String, Map<String, Object>> data = objectMapper.readValue(jsonFile, new TypeReference<>() {});
 
-                // Crear una nueva lista para cada archivo JSON
-                List<List<Tabla>> listsJsonNamesForFile = new ArrayList<>();
+                List<List<Table>> listsJsonNamesForFile = new ArrayList<>();
 
                 for (Map.Entry<String, Map<String, Object>> entry : data.entrySet()) {
                     String tableId = entry.getKey();
                     Map<String, Object> tableData = entry.getValue();
 
-                    // Crear una lista para las tablas de un archivo específico
-                    List<Tabla> list = new ArrayList<>();
+                    // List of tables for the current file
+                    List<Table> list = new ArrayList<>();
 
-                    list.add(new Tabla(
+                    list.add(new Table(
                             tableId,
                             processField("Caption", tableData.get("caption")),
                             processField("Table", tableData.get("table")),
@@ -61,48 +61,22 @@ public class Main {
                             processField("Footnotes", tableData.get("footnotes")),
                             processField("References", tableData.get("references"))));
 
-                    listsJsonNamesForFile.add(list);  // Agregar la tabla a la lista de este archivo
+                    listsJsonNamesForFile.add(list);  // Add the table
                 }
 
-                // Ahora agregamos la lista de este archivo al mapa, usando el nombre del archivo como clave
+                // Insert the list to the map with key the name of the Json File
                 mapTables.put(jsonFile.getName(), listsJsonNamesForFile);
 
             } catch (IOException e) {
                 System.err.println("Unexpected error when processing the file:  " + jsonFile.getName());
                 e.printStackTrace();
             }
-            countFiles += 1;
+            countFiles++;
         }
 
-
-        Indexer index = new Indexer();
+        it.uniroma3.homework3.util.Indexer index = new it.uniroma3.homework3.util.Indexer(AnalyzerFactory.getAnalyzer());
         index.index(pathIndex, mapTables);
-        //System.out.println(mapTables);
-//        for (String clave : mapTables.keySet()) {
-//            System.out.println("Clave: " + clave);
-//
-//            // Obtener la lista de listas asociada a esta clave
-//            List<List<Tabla>> listasTablas = mapTables.get(clave);
-//
-//            // Iterar por cada lista dentro de la lista principal
-//            for (List<Tabla> listaTablas : listasTablas) {
-//                System.out.println("\tNueva lista de tablas:");
-//
-//                // Iterar por cada tabla en esta lista
-//                for (Tabla tabla : listaTablas) {
-//                    System.out.println("\t\tTabla ID: " + tabla.getId());
-//                    System.out.println("\t\tCaption: " + tabla.getCaption());
-//                    //System.out.println("\t\tTabla HTML: " + tabla.getTabla());
-//                    //System.out.println("\t\tInformación de la tabla: " + tabla.getInformacionTabla());
-//                    //System.out.println("\t\tNotas al pie: " + tabla.getFootnotes());
-//                    //System.out.println("\t\tReferencias: " + tabla.getReferencias());
-//                }
-//            }
-//        }
-//        System.out.println("================= " + count);
-//        System.out.println("================= " + countFiles);
     }
-
 
     private static String processField(String fieldName, Object fieldValue) {
         String result = "Null";
@@ -113,42 +87,40 @@ public class Main {
                 if (!processedValue.isEmpty()) {
                     result = processedValue;
                 } else {
-                    System.out.println("- Field `" + fieldName + "` is empty or only whitespace.");
+                    System.out.println("- Field ' " + fieldName + " ' is empty or only whitespace.");
                 }
             } else {
-                System.out.println("- Not expected type for `" + fieldName + "`.");
+                System.out.println("- Not expected type for ' " + fieldName + " '.");
             }
         } else {
-            System.out.println("Doesn't have the field --> `" + fieldName + "`.");
+            System.out.println("Doesn't have the field --> ' " + fieldName + " '.");
         }
-
         return result;
     }
 
-
     private static String processTables(Object table) {
-        String columnsAndRows = "Null,";
+        List<String> columnsAndRows = new ArrayList<>();
+        //String columnsAndRows = "Null,";
 
         if (table != null) {
             if (table instanceof String) {
                 String tableString = ((String) table).replaceAll("\\s+", " ").trim();
                 if (!tableString.isEmpty()) {
-                    // Procesar la tabla solo si no está vacía
+                    // Process table only if it has content
                     Document doc = Jsoup.parse(tableString);
                     Elements rows = doc.select("tr");
-                    StringBuilder resultBuilder = new StringBuilder();
+                    //StringBuilder resultBuilder = new StringBuilder();
 
                     for (Element row : rows) {
-                        Elements cells = row.select("th");
+                        Elements cells = row.select("th, td");
                         for (Element cell : cells) {
                             String text = cell.text().trim();
-                            resultBuilder.append(text).append(", ");
+                            columnsAndRows.add(text);
+                            //resultBuilder.append(text).append(", ");
                         }
                     }
-                    if (resultBuilder.length() > 0) {
-                        columnsAndRows = resultBuilder.toString().trim();
-                    } else {
-                        System.out.println("- No header cells (`th`) found in the table.");
+                    if (columnsAndRows.isEmpty()) {
+                        System.out.println("- No header cells (th) found in the table.");
                     }
                 } else {
                     System.out.println("- Table content is empty or only whitespace.");
@@ -159,9 +131,25 @@ public class Main {
         } else {
             System.out.println("- Table is null.");
         }
-
-        return columnsAndRows;
+        List<String> noNumbers = extractNonNumbers(columnsAndRows);
+        return String.join(", ", noNumbers);
     }
 
+    public static List<String> extractNonNumbers(List<String> inputStrings) {
+        // Regex to match standalone numbers (negative, decimal, or percentage)
+        String regex = "\\b-?\\d+(?:[.,]\\d+)?%?\\b";
+        Pattern pattern = Pattern.compile(regex);
 
+        List<String> nonNumbers = new ArrayList<>();
+
+        for (String str : inputStrings) {
+            Matcher matcher = pattern.matcher(str);
+            // Add the string to the result if it doesn't match the numeric pattern
+            if (!matcher.find()) {
+                nonNumbers.add(str);
+            }
+        }
+
+        return nonNumbers;
+    }
 }
