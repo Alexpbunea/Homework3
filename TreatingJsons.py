@@ -29,18 +29,15 @@ def remove_brackets(data, field):
                 else:
                     data[field] = " ".join(data[field])
 
-
-
         except Exception as e:
             print(f"Error processing brackets in field '{field}': {e}") #only a print because [] is not compulsary
-
 
 def process_json_file(file_path):
     with open(file_path, "r", encoding="utf-8") as file:
         data = json.load(file)
 
     fields_to_remove = ["INFO", "PAPER'S NUMBER OF TABLES", "global_footnotes"]
-
+    
     for field in fields_to_remove:
         result = remove_field(data, field, file_path)
         if result[1] == 0:  # Archivo eliminado
@@ -51,14 +48,13 @@ def process_json_file(file_path):
         elif result[1] == -1:
             print(f"Field '{field}' not found in file {file_path}.")
 
-
-
+    
     fields_to_clean = ["caption", "table", "footnotes", "references"]
     for table_id, table_data in data.items():
         for field in fields_to_clean:
-            remove_brackets(table_data, field)
+            remove_brackets(table_data, field)                                                    
 
-
+    
     with open(file_path, "w", encoding="utf-8") as file:
         json.dump(data, file, ensure_ascii=False, indent=4)
     print(f"File {file_path} updated successfully.")
